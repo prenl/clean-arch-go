@@ -2,18 +2,7 @@ package usecase
 
 import (
 	"architecture_go/services/contact/internal/domain"
-	"architecture_go/services/contact/internal/repository"
 )
-
-type ContactUseCaseImpl struct {
-	repository domain.ContactRepository
-}
-
-func NewContactUseCase(repository repository.ContactRepository) ContactUseCase {
-	return &ContactUseCaseImpl{
-		repository: repository,
-	}
-}
 
 type ContactUseCase interface {
 	// Contact model

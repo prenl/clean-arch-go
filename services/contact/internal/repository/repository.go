@@ -4,6 +4,12 @@ import (
 	"architecture_go/services/contact/internal/domain"
 )
 
+type ContactRepositoryImpl struct{}
+
+func NewContactRepository() ContactRepository {
+	return &ContactRepositoryImpl{}
+}
+
 type ContactRepository interface {
 	// Contact model
 	CreateContact(contact domain.Contact) (int, error)

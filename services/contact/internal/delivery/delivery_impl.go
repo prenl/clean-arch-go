@@ -3,13 +3,11 @@ package delivery
 import (
 	"architecture_go/services/contact/internal/domain"
 	"architecture_go/services/contact/internal/usecase"
-	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"github.com/google/uuid"
 )
 
 type ContactDeliveryImpl struct {
@@ -24,11 +22,11 @@ func NewContactDelivery(usecase usecase.ContactUseCase) ContactDelivery {
 
 func (c *ContactDeliveryImpl) CreateContact(w http.ResponseWriter, r *http.Request) {
 	var contact domain.Contact
-
-    requestID := uuid.New().String()
-    ctx := context.WithValue(r.Context(), "ID", requestID)
+    
+    ctx := r.Context()
 
 	if err := json.NewDecoder(r.Body).Decode(&contact); err != nil {
+        log.Fatal(err);
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -36,7 +34,8 @@ func (c *ContactDeliveryImpl) CreateContact(w http.ResponseWriter, r *http.Reque
 	id, err := c.usecase.CreateContact(ctx, contact)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+        log.Fatal(err);
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
@@ -51,12 +50,14 @@ func (cd *ContactDeliveryImpl) GetContact(w http.ResponseWriter, r *http.Request
     ctx := r.Context()
 
     if err != nil {
+        log.Fatal(err);
         http.Error(w, "Contact ID should be integer value!", http.StatusBadRequest)
         return
     }
 
     contact, err := cd.usecase.GetContact(ctx, id)
     if err != nil {
+        log.Fatal(err);
         http.Error(w, err.Error(), http.StatusNotFound)
         return
     }
@@ -69,6 +70,7 @@ func (cd *ContactDeliveryImpl) UpdateContact(w http.ResponseWriter, r *http.Requ
     ctx := r.Context()
 
     if err := json.NewDecoder(r.Body).Decode(&contact); err != nil {
+        log.Fatal(err);
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
@@ -76,6 +78,7 @@ func (cd *ContactDeliveryImpl) UpdateContact(w http.ResponseWriter, r *http.Requ
     err := cd.usecase.UpdateContact(ctx, contact)
 
     if err != nil {
+        log.Fatal(err);
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
@@ -91,6 +94,7 @@ func (cd *ContactDeliveryImpl) DeleteContact(w http.ResponseWriter, r *http.Requ
     ctx := r.Context()
 
     if err != nil {
+        log.Fatal(err);
         http.Error(w, "Contact ID should be integer value!", http.StatusBadRequest)
         return
     }
@@ -98,7 +102,8 @@ func (cd *ContactDeliveryImpl) DeleteContact(w http.ResponseWriter, r *http.Requ
     err = cd.usecase.DeleteContact(ctx, id)
 
     if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        log.Fatal(err);
+        http.Error(w, err.Error(), http.StatusNotFound)
         return
     }
 
@@ -111,12 +116,15 @@ func (cd *ContactDeliveryImpl) CreateGroup(w http.ResponseWriter, r *http.Reques
     ctx := r.Context()
 
     if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
+        log.Fatal(err);
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
 
     id, err := cd.usecase.CreateGroup(ctx, group)
+
     if err != nil {
+        log.Fatal(err);
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }
@@ -132,12 +140,15 @@ func (cd *ContactDeliveryImpl) GetGroup(w http.ResponseWriter, r *http.Request) 
     ctx := r.Context()
 
     if err != nil {
+        log.Fatal(err);
         http.Error(w, "Invalid group ID", http.StatusBadRequest)
         return
     }
 
     group, err := cd.usecase.GetGroup(ctx, id)
+
     if err != nil {
+        log.Fatal(err);
         http.Error(w, err.Error(), http.StatusNotFound)
         return
     }
@@ -154,12 +165,15 @@ func (cd *ContactDeliveryImpl) AddContactToGroup(w http.ResponseWriter, r *http.
     ctx := r.Context()
 
     if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+        log.Fatal(err);
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
 
     err := cd.usecase.AddContactToGroup(ctx, request.ContactID, request.GroupID)
+    
     if err != nil {
+        log.Fatal(err);
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
     }

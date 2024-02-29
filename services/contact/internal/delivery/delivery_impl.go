@@ -3,10 +3,13 @@ package delivery
 import (
 	"architecture_go/services/contact/internal/domain"
 	"architecture_go/services/contact/internal/usecase"
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type ContactDeliveryImpl struct {
@@ -22,12 +25,15 @@ func NewContactDelivery(usecase usecase.ContactUseCase) ContactDelivery {
 func (c *ContactDeliveryImpl) CreateContact(w http.ResponseWriter, r *http.Request) {
 	var contact domain.Contact
 
+    requestID := uuid.New().String()
+    ctx := context.WithValue(r.Context(), "ID", requestID)
+
 	if err := json.NewDecoder(r.Body).Decode(&contact); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	id, err := c.usecase.CreateContact(contact)
+	id, err := c.usecase.CreateContact(ctx, contact)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -42,12 +48,14 @@ func (cd *ContactDeliveryImpl) GetContact(w http.ResponseWriter, r *http.Request
     idStr := strings.TrimPrefix(r.URL.Path, "/contacts/")
     id, err := strconv.Atoi(idStr)
 
+    ctx := r.Context()
+
     if err != nil {
         http.Error(w, "Contact ID should be integer value!", http.StatusBadRequest)
         return
     }
 
-    contact, err := cd.usecase.GetContact(id)
+    contact, err := cd.usecase.GetContact(ctx, id)
     if err != nil {
         http.Error(w, err.Error(), http.StatusNotFound)
         return
@@ -58,13 +66,14 @@ func (cd *ContactDeliveryImpl) GetContact(w http.ResponseWriter, r *http.Request
 
 func (cd *ContactDeliveryImpl) UpdateContact(w http.ResponseWriter, r *http.Request) {
     var contact domain.Contact
+    ctx := r.Context()
 
     if err := json.NewDecoder(r.Body).Decode(&contact); err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
 
-    err := cd.usecase.UpdateContact(contact)
+    err := cd.usecase.UpdateContact(ctx, contact)
 
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -79,12 +88,14 @@ func (cd *ContactDeliveryImpl) DeleteContact(w http.ResponseWriter, r *http.Requ
     idStr := strings.TrimPrefix(r.URL.Path, "/contacts/")
     id, err := strconv.Atoi(idStr)
 
+    ctx := r.Context()
+
     if err != nil {
         http.Error(w, "Contact ID should be integer value!", http.StatusBadRequest)
         return
     }
 
-    err = cd.usecase.DeleteContact(id)
+    err = cd.usecase.DeleteContact(ctx, id)
 
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -97,12 +108,14 @@ func (cd *ContactDeliveryImpl) DeleteContact(w http.ResponseWriter, r *http.Requ
 func (cd *ContactDeliveryImpl) CreateGroup(w http.ResponseWriter, r *http.Request) {
     var group domain.Group
 
+    ctx := r.Context()
+
     if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
 
-    id, err := cd.usecase.CreateGroup(group)
+    id, err := cd.usecase.CreateGroup(ctx, group)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return
@@ -115,12 +128,15 @@ func (cd *ContactDeliveryImpl) CreateGroup(w http.ResponseWriter, r *http.Reques
 func (cd *ContactDeliveryImpl) GetGroup(w http.ResponseWriter, r *http.Request) {
     idStr := strings.TrimPrefix(r.URL.Path, "/groups/")
     id, err := strconv.Atoi(idStr)
+
+    ctx := r.Context()
+
     if err != nil {
         http.Error(w, "Invalid group ID", http.StatusBadRequest)
         return
     }
 
-    group, err := cd.usecase.GetGroup(id)
+    group, err := cd.usecase.GetGroup(ctx, id)
     if err != nil {
         http.Error(w, err.Error(), http.StatusNotFound)
         return
@@ -134,12 +150,15 @@ func (cd *ContactDeliveryImpl) AddContactToGroup(w http.ResponseWriter, r *http.
         ContactID int `json:"contact_id"`
         GroupID   int `json:"group_id"`
     }
+
+    ctx := r.Context()
+
     if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
         http.Error(w, err.Error(), http.StatusBadRequest)
         return
     }
 
-    err := cd.usecase.AddContactToGroup(request.ContactID, request.GroupID)
+    err := cd.usecase.AddContactToGroup(ctx, request.ContactID, request.GroupID)
     if err != nil {
         http.Error(w, err.Error(), http.StatusInternalServerError)
         return

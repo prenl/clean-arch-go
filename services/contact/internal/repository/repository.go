@@ -2,23 +2,24 @@ package repository
 
 import (
 	"architecture_go/services/contact/internal/domain"
+	"context"
 )
 
 type ContactRepository interface {
 	// Contact model
-	CreateContact(contact domain.Contact) (int, error)
-	GetContact(id int) (*domain.Contact, error)
-	UpdateContact(contact domain.Contact) error
-	DeleteContact(id int) error
+	CreateContact(ctx context.Context, contact domain.Contact) (int, error)
+	GetContact(ctx context.Context, id int) (*domain.Contact, error)
+	UpdateContact(ctx context.Context, contact domain.Contact) error
+	DeleteContact(ctx context.Context, id int) error
 
 	// Group model
-	CreateGroup(group domain.Group) (int, error)
-	GetGroup(id int) (*domain.Group, error)
-	UpdateGroup(group domain.Group) error
-	DeleteGroup(id int) error
+	CreateGroup(ctx context.Context, group domain.Group) (int, error)
+	GetGroup(ctx context.Context, id int) (*domain.Group, error)
+	UpdateGroup(ctx context.Context, group domain.Group) error
+	DeleteGroup(ctx context.Context, id int) error
 
 	// ContactGroup model
-	AddContactToGroup(contactID, groupID int) error
-	RemoveContactFromGroup(contactID, groupID int) error
-	GetContactsByGroup(groupID int) ([]*domain.Contact, error)
+	AddContactToGroup(ctx context.Context, contactID, groupID int) error
+	RemoveContactFromGroup(ctx context.Context, contactID, groupID int) error
+	GetContactsByGroup(ctx context.Context, groupID int) ([]*domain.Contact, error)
 }

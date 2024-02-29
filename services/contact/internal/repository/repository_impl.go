@@ -24,10 +24,10 @@ func NewContactRepository(conn *pgx.Conn) ContactRepository {
 	}
 }
 
-func (repo *ContactRepositoryImpl) CreateContact(contact domain.Contact) (int, error) {
+func (repo *ContactRepositoryImpl) CreateContact(ctx context.Context, contact domain.Contact) (int, error) {
 	sql := `INSERT INTO contacts (first_name, middle_name, last_name, phone_number) VALUES ($1, $2, $3, $4) RETURNING id`
 	var id int
-	err := repo.conn.QueryRow(context.Background(), sql, contact.FirstName, contact.MiddleName, contact.LastName, contact.PhoneNumber).Scan(&id)
+	err := repo.conn.QueryRow(ctx, sql, contact.FirstName, contact.MiddleName, contact.LastName, contact.PhoneNumber).Scan(&id)
 	
 	if err != nil {
 		return 0, err
@@ -36,19 +36,19 @@ func (repo *ContactRepositoryImpl) CreateContact(contact domain.Contact) (int, e
 	return id, nil
 }
 
-func (repo *ContactRepositoryImpl) GetContact(id int) (*domain.Contact, error) {
+func (repo *ContactRepositoryImpl) GetContact(ctx context.Context, id int) (*domain.Contact, error) {
 	sql := `SELECT id, first_name, middle_name, last_name, phone_number FROM contacts WHERE id = $1`
 	var contact domain.Contact
-	err := repo.conn.QueryRow(context.Background(), sql, id).Scan(&contact.ID, &contact.FirstName, &contact.MiddleName, &contact.LastName, &contact.PhoneNumber)
+	err := repo.conn.QueryRow(ctx, sql, id).Scan(&contact.ID, &contact.FirstName, &contact.MiddleName, &contact.LastName, &contact.PhoneNumber)
 	if err != nil {
 		return nil, err
 	}
 	return &contact, nil
 }
 
-func (repo *ContactRepositoryImpl) UpdateContact(contact domain.Contact) error {
+func (repo *ContactRepositoryImpl) UpdateContact(ctx context.Context, contact domain.Contact) error {
 	sql := `UPDATE contacts SET first_name = $1, middle_name = $2, last_name = $3, phone_number = $4 WHERE id = $5`
-	cmdTag, err := repo.conn.Exec(context.Background(), sql, contact.FirstName, contact.MiddleName, contact.LastName, contact.PhoneNumber, contact.ID)
+	cmdTag, err := repo.conn.Exec(ctx, sql, contact.FirstName, contact.MiddleName, contact.LastName, contact.PhoneNumber, contact.ID)
 	if err != nil {
 		return err
 	}
@@ -58,9 +58,9 @@ func (repo *ContactRepositoryImpl) UpdateContact(contact domain.Contact) error {
 	return nil
 }
 
-func (repo *ContactRepositoryImpl) DeleteContact(id int) error {
+func (repo *ContactRepositoryImpl) DeleteContact(ctx context.Context, id int) error {
 	sql := `DELETE FROM contacts WHERE id = $1`
-	cmdTag, err := repo.conn.Exec(context.Background(), sql, id)
+	cmdTag, err := repo.conn.Exec(ctx, sql, id)
 	if err != nil {
 		return err
 	}
@@ -70,20 +70,20 @@ func (repo *ContactRepositoryImpl) DeleteContact(id int) error {
 	return nil
 }
 
-func (repo *ContactRepositoryImpl) CreateGroup(group domain.Group) (int, error) {
+func (repo *ContactRepositoryImpl) CreateGroup(ctx context.Context, group domain.Group) (int, error) {
 	sql := `INSERT INTO groups (name) VALUES ($1) RETURNING id`
 	var id int
-	err := repo.conn.QueryRow(context.Background(), sql, group.Name).Scan(&id)
+	err := repo.conn.QueryRow(ctx, sql, group.Name).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
 	return id, nil
 }
 
-func (repo *ContactRepositoryImpl) GetGroup(id int) (*domain.Group, error) {
+func (repo *ContactRepositoryImpl) GetGroup(ctx context.Context, id int) (*domain.Group, error) {
 	sql := `SELECT id, name FROM groups WHERE id = $1`
 	var group domain.Group
-	err := repo.conn.QueryRow(context.Background(), sql, id).Scan(&group.ID, &group.Name)
+	err := repo.conn.QueryRow(ctx, sql, id).Scan(&group.ID, &group.Name)
 
 	if err != nil {
 		return nil, err
@@ -92,9 +92,9 @@ func (repo *ContactRepositoryImpl) GetGroup(id int) (*domain.Group, error) {
 	return &group, nil
 }
 
-func (repo *ContactRepositoryImpl) UpdateGroup(group domain.Group) error {
+func (repo *ContactRepositoryImpl) UpdateGroup(ctx context.Context, group domain.Group) error {
 	sql := `UPDATE groups SET name = $1 WHERE id = $2`
-	cmdTag, err := repo.conn.Exec(context.Background(), sql, group.Name, group.ID)
+	cmdTag, err := repo.conn.Exec(ctx, sql, group.Name, group.ID)
 	if err != nil {
 		return err
 	}
@@ -104,9 +104,9 @@ func (repo *ContactRepositoryImpl) UpdateGroup(group domain.Group) error {
 	return nil
 }
 
-func (repo *ContactRepositoryImpl) DeleteGroup(id int) error {
+func (repo *ContactRepositoryImpl) DeleteGroup(ctx context.Context, id int) error {
 	sql := `DELETE FROM groups WHERE id = $1`
-	cmdTag, err := repo.conn.Exec(context.Background(), sql, id)
+	cmdTag, err := repo.conn.Exec(ctx, sql, id)
 	if err != nil {
 		return err
 	}
@@ -116,24 +116,24 @@ func (repo *ContactRepositoryImpl) DeleteGroup(id int) error {
 	return nil
 }
 
-func (repo *ContactRepositoryImpl) AddContactToGroup(contactID, groupID int) error {
+func (repo *ContactRepositoryImpl) AddContactToGroup(ctx context.Context, contactID, groupID int) error {
 	sql := `INSERT INTO contact_group (contact_id, group_id) VALUES ($1, $2)`
-	_, err := repo.conn.Exec(context.Background(), sql, contactID, groupID)
+	_, err := repo.conn.Exec(ctx, sql, contactID, groupID)
 	return err
 }
 
-func (repo *ContactRepositoryImpl) RemoveContactFromGroup(contactID, groupID int) error {
+func (repo *ContactRepositoryImpl) RemoveContactFromGroup(ctx context.Context, contactID, groupID int) error {
 	sql := `DELETE FROM contact_group WHERE contact_id = $1 AND group_id = $2`
-	_, err := repo.conn.Exec(context.Background(), sql, contactID, groupID)
+	_, err := repo.conn.Exec(ctx, sql, contactID, groupID)
 	return err
 }
 
-func (repo *ContactRepositoryImpl) GetContactsByGroup(groupID int) ([]*domain.Contact, error) {
+func (repo *ContactRepositoryImpl) GetContactsByGroup(ctx context.Context, groupID int) ([]*domain.Contact, error) {
 	sql := `SELECT c.id, c.first_name, c.middle_name, c.last_name, c.phone_number 
 	FROM contacts c
 	INNER JOIN contact_group cg ON c.id = cg.contact_id
 	WHERE cg.group_id = $1`
-	rows, err := repo.conn.Query(context.Background(), sql, groupID)
+	rows, err := repo.conn.Query(ctx, sql, groupID)
 	if err != nil {
 		return nil, err
 	}
